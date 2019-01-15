@@ -14,13 +14,21 @@ const Sketch = Fritzing.Sketch
 let tempBlockConnections = []
 let tempAimConnections = []
 
-function download() {
-		return fs.readFile('./Lauflicht_Projekt.fzz',function(err,data){
+let filename = './none'
+
+function download(filename) {
+		return fs.readFile('./'+filename,function(err,data){
 		SketchBundle.fromFZZ(data)
 		.then((sketchBundle) => {
-			let myInstances = sketchBundle.primary['Lauflicht_Projekt.fz'].instances
+			console.log("from sketchBundle", filename,filename.slice(0, -1));
+			let mytest = sketchBundle.primary
+			filename = filename.slice(0, -1)
+			console.log("mytest", mytest, mytest[filename]);
+			let nexttest = mytest
+			let myInstances = sketchBundle.primary[filename].instances
 			// get the arduino from the source fz
 			let theArduino = _.find(myInstances, function(el) {
+				// console.log(myInstances);
 				return el.moduleIdRef === 'arduino_Uno_Rev3(fix)'
 			 })
 
@@ -59,6 +67,13 @@ download()
 app.get('/fzz', function (req, res) {
 	download()
 	console.log("get the fzz",tempBlockConnections);
+	 res.json(JSON.stringify(tempBlockConnections));
+	 tempBlockConnections = []
+});
+app.get('/fzz/:filename', function (req, res) {
+	// req.query.filename
+	download(req.params.filename)
+	console.log("get the fzz",req.params.filename);
 	 res.json(JSON.stringify(tempBlockConnections));
 	 tempBlockConnections = []
 });
