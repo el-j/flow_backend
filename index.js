@@ -27,6 +27,14 @@ function download(filename,res) {
 							// console.log("mytest", mytest, mytest[filename]);
 							let nexttest = mytest
 							let myInstances = sketchBundle.primary[filename].instances
+<<<<<<< HEAD
+=======
+
+							let allParts = _.find(myInstances, function() {
+								return el.moduleIdRef !== el.moduleIdRef.includes('Wire')
+							})
+							console.log(allParts);
+>>>>>>> develop
 							// get the arduino from the source fz
 							let theArduino = _.find(myInstances, function(el) {
 								// console.log(myInstances);
@@ -53,7 +61,11 @@ function download(filename,res) {
 									tempBlockConnections.push({name,type,elConSourceIndex,elConSource, elConAim, elConAimIndex})
 								}
 							 }
+<<<<<<< HEAD
 							 console.log(tempBlockConnections);
+=======
+							 // console.log(tempBlockConnections);
+>>>>>>> develop
 
 							 tempBlockConnections.map((element) => {
 								 let aimPart = _.find(myInstances, function(el) {
@@ -63,7 +75,11 @@ function download(filename,res) {
 									 })
 									 // console.log(aimPart);
 
+<<<<<<< HEAD
 								 console.log(aimPart.viewSettings[0].connectors[0].connectsTo[0].modelIndex);
+=======
+								 // console.log(aimPart.viewSettings[0].connectors[0].connectsTo[0].modelIndex);
+>>>>>>> develop
 							 })
 
 								 // let aimPart = _.find(tempBlockConnections[i], function(el) {
