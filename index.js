@@ -14,68 +14,109 @@ const Sketch = Fritzing.Sketch
 let tempBlockConnections = []
 let tempAimConnections = []
 
-let filename = './none'
+let filename = 'test.fzz'
 
-function download(filename) {
-		return fs.readFile('./'+filename,function(err,data){
-		SketchBundle.fromFZZ(data)
-		.then((sketchBundle) => {
-			console.log("from sketchBundle", filename,filename.slice(0, -1));
-			let mytest = sketchBundle.primary
-			filename = filename.slice(0, -1)
-			console.log("mytest", mytest, mytest[filename]);
-			let nexttest = mytest
-			let myInstances = sketchBundle.primary[filename].instances
-			// get the arduino from the source fz
-			let theArduino = _.find(myInstances, function(el) {
-				// console.log(myInstances);
-				return el.moduleIdRef === 'arduino_Uno_Rev3(fix)'
-			 })
+function download(filename,res) {
+		return fs.readFile('./examples/'+filename,function(err,data){
+			if (data) {
+					SketchBundle.fromFZZ(data)
+						.then((sketchBundle) => {
+							console.log("from sketchBundle", filename,filename.slice(0, -1));
+							let mytest = sketchBundle.primary
+							filename = filename.slice(0, -1)
+							// console.log("mytest", mytest, mytest[filename]);
+							let nexttest = mytest
+							let myInstances = sketchBundle.primary[filename].instances
+							// get the arduino from the source fz
+							let theArduino = _.find(myInstances, function(el) {
+								// console.log(myInstances);
+								return el.moduleIdRef === 'arduino_Uno_Rev3(fix)'
+							 })
+							 elCons = theArduino.viewSettings[0].connectors
+							 for (var i = 0; i < elCons.length; i++) {
+							 	elCon = elCons[i]
+								elConSource = elCon.id
+								name = elCon.id
 
-			 // get all connected connectors of the arduino
-			 elementConnectors = theArduino.viewSettings[0].connectors
-			 for (var i = 0; i < elementConnectors.length; i++) {
-			 	elementConnector = elementConnectors[i]
-				elementConnectorSource = elementConnector.id
-				// connected to part with modelIndex and the connector id
-				elementConnectorAim = elementConnector.connectsTo[0].id
-				elementConnectorAimIndex = elementConnector.connectsTo[0].modelIndex
-				// console.log(elementConnectorSource, elementConnectorAim, elementConnectorIndex);
+								if (i %2 === 0) {
+									type = 'in'
 
-				tempBlockConnections.push({elementConnectorSource, elementConnectorAim, elementConnectorAimIndex})
-			 }
-			 // //  get the connection endpoint ad reference
-			 // tempBlockConnections.map(data => {
-			 //  // check the connected Part via modelIndex and update the sourceIndex of the connection to compare later
-			 //  let theConnection = _.find(myInstances, function(el) {
-			 // 	 console.log(el.modelIndex)
-			 // 	 	return el.modelIndex === data.elementConnectorAimIndex
-			 // 	  })
-			 // 		console.log(theConnection);
-			 // 		data['elementConnectorSourceIndex'] = theConnection.viewSettings[0].connectors[0].connectsTo[0].modelIndex
-			 //  // console.log(theConnection.viewSettings[0].connectors[0]);
-			 // })
+								}
+								else  {
+									type = 'out'
+
+								}
+								elConSourceIndex = theArduino.modelIndex
+								elConAim = elCon.connectsTo[0].id
+								elConAimIndex = elCon.connectsTo[0].modelIndex
+								if (elConAimIndex !== elConSourceIndex) {
+									tempBlockConnections.push({name,type,elConSourceIndex,elConSource, elConAim, elConAimIndex})
+								}
+							 }
+							 console.log(tempBlockConnections);
+
+							 tempBlockConnections.map((element) => {
+								 let aimPart = _.find(myInstances, function(el) {
+									 if (el.modelIndex === element.elConAimIndex && el.viewSettings.length > 1) {
+										 return el.modelIndex === element.elConAimIndex
+									 }
+									 })
+									 // console.log(aimPart);
+
+								 console.log(aimPart.viewSettings[0].connectors[0].connectsTo[0].modelIndex);
+							 })
+
+								 // let aimPart = _.find(tempBlockConnections[i], function(el) {
+									//  // console.log(myInstances);
+									//  return el.modelIndex === 'arduino_Uno_Rev3(fix)'
+								 // })
+									// tempBlockConnections[i].elConIndex
+							 // }
+							 // //  get the connection endpoint ad reference
+							 // tempBlockConnections.map(data => {
+							 //  // check the connected Part via modelIndex and update the sourceIndex of the connection to compare later
+							 //  let theConnection = _.find(myInstances, function(el) {
+							 // 	 console.log(el.modelIndex)
+							 // 	 	return el.modelIndex === data.elConAimIndex
+							 // 	  })
+							 // 		console.log(theConnection);
+							 // 		data['elConSourceIndex'] = theConnection.viewSettings[0].connectors[0].connectsTo[0].modelIndex
+							 //  // console.log(theConnection.viewSettings[0].connectors[0]);
+							 // })
+							 	 res.json(JSON.stringify(tempBlockConnections));
+								 tempBlockConnections = []
+
+							})
+							.catch((err) => {
+								console.log("we have an error",err);
+								res.json(JSON.stringify({err:	{show: true,
+								message: 'err from sketchBundle'}
+								})
+							);
 			})
-			.catch((err) => {
-				console.log("we have an error",err);
-			})
+		}else {
+			console.log("err,readFile",err);
+
+			res.json({err:	{show: true,
+			message: err}
 		})
+		}
+	})
 }
-download()
+// download(filename)
 
 
 app.get('/fzz', function (req, res) {
-	download()
-	console.log("get the fzz",tempBlockConnections);
-	 res.json(JSON.stringify(tempBlockConnections));
-	 tempBlockConnections = []
+	download('none',res)
+	// console.log("get the fzz",tempBlockConnections);
+
 });
 app.get('/fzz/:filename', function (req, res) {
 	// req.query.filename
-	download(req.params.filename)
-	console.log("get the fzz",req.params.filename);
-	 res.json(JSON.stringify(tempBlockConnections));
-	 tempBlockConnections = []
+	download(req.params.filename,res)
+	// console.log("get the fzz",req.params.filename);
+	 // res.json(JSON.stringify(tempBlockConnections));
+	 // tempBlockConnections = []
 });
 
 // On localhost:3000/welcome
