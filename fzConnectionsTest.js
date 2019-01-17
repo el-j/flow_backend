@@ -1,5 +1,5 @@
-const fritzingConnections = require('./fzConnections.js')
+const fzConnections = require('./fzConnections.js')
 const partNames = require('./data/out.json')
 
-let myConnections = fritzingConnections.fritzingConnections('ardu',partNames)
+let myConnections = fzConnections.fzConnections('ardu',partNames)
 // console.log(myConnections.mainBoardEndConnection);

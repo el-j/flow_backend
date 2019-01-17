@@ -8,7 +8,7 @@ const _ = require('lodash')
 const app = express();
 // const {parse, stringify} = require('flatted/cjs')
 
-const fritzingConnections = require('./transform3.js')
+const fzConnections = require('./fzConnections.js')
 const partNames = require('./partNames.js')
 let mysketch
 
@@ -43,13 +43,9 @@ function download(filename,res) {
 							/*
 							get all the partnames from the fz
 							*/
-
-							console.log(partNames);
-
 							let iLoveTest = partNames.partNames(allParts)
 							// fs.writeFileSync('./data/out.json', JSON.stringify(partNames));
-							// console.log(fritzingConnections);
-							let myConnections = fritzingConnections.fritzingConnections('ardu',iLoveTest)
+							let myConnections = fzConnections.fzConnections('ardu',iLoveTest)
 							console.log(myConnections.mainBoardEndConnection[0]);
 							// fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
 							/*

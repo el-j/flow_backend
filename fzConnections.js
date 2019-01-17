@@ -1,7 +1,7 @@
 const _ = require('lodash')
 // const inData = require('./data/out.json')
 
-module.exports.fritzingConnections = (mainBoardName, inData) => {
+module.exports.fzConnections = (mainBoardName, inData) => {
   let name = mainBoardName
   let otherParts = []
   console.log(mainBoardName);
