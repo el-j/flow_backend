@@ -1,11 +1,17 @@
 // Require express and create an instance of it
-var Fritzing = require ('./node_modules/fritzing-js/fritzing.js')
-var express = require('express');
-var cors = require('cors')
-var fs = require('fs');
-var _ = require('lodash')
-var app = express();
+const Fritzing = require ('./node_modules/fritzing-js/fritzing.js')
+const {FritzingPartsAPIClient} = require('fritzing-parts-api-client-js')
+const express = require('express');
+const cors = require('cors')
+const fs = require('fs');
+const _ = require('lodash')
+const app = express();
+// const {parse, stringify} = require('flatted/cjs')
+
+const fritzingConnections = require('./transform3.js')
+const partNames = require('./partNames.js')
 let mysketch
+
 
 app.use(cors())
 
@@ -24,22 +30,39 @@ function download(filename,res) {
 							console.log("from sketchBundle", filename,filename.slice(0, -1));
 							let mytest = sketchBundle.primary
 							filename = filename.slice(0, -1)
-							// console.log("mytest", mytest, mytest[filename]);
-							let nexttest = mytest
 							let myInstances = sketchBundle.primary[filename].instances
-
-							let allParts = _.find(myInstances, function() {
-								return el.moduleIdRef !== el.moduleIdRef.includes('Wire')
+							/*
+							get all the parts that are not wires
+							*/
+							let allParts = _.filter(myInstances, function(el) {
+								// if (!el.moduleIdRef.includes('Wire') && !el.moduleIdRef.includes('Via')  && !el.moduleIdRef.includes('Hole') ) {
+									return el
+								// }
 							})
-							console.log(allParts);
 
-							// get the arduino from the source fz
+							/*
+							get all the partnames from the fz
+							*/
+
+							console.log(partNames);
+
+							let iLoveTest = partNames.partNames(allParts)
+							// fs.writeFileSync('./data/out.json', JSON.stringify(partNames));
+							// console.log(fritzingConnections);
+							let myConnections = fritzingConnections.fritzingConnections('ardu',iLoveTest)
+							console.log(myConnections.mainBoardEndConnection[0]);
+							// fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
+							/*
+							get the arduino instance
+							*/
 							let theArduino = _.find(myInstances, function(el) {
-								// console.log(myInstances);
-								return el.moduleIdRef === 'arduino_Uno_Rev3(fix)'
+								if (el.moduleIdRef.includes('arduino')){
+								return el
+								}
 							 })
+
 							 elCons = theArduino.viewSettings[0].connectors
-							 for (var i = 0; i < elCons.length; i++) {
+							 for (let i = 0; i < elCons.length; i++) {
 							 	elCon = elCons[i]
 								elConSource = elCon.id
 								name = elCon.id
@@ -60,39 +83,14 @@ function download(filename,res) {
 								}
 							 }
 
-							 // console.log(tempBlockConnections);
-
-
 							 tempBlockConnections.map((element) => {
 								 let aimPart = _.find(myInstances, function(el) {
 									 if (el.modelIndex === element.elConAimIndex && el.viewSettings.length > 1) {
 										 return el.modelIndex === element.elConAimIndex
 									 }
 									 })
-									 // console.log(aimPart);
-
-
-								 // console.log(aimPart.viewSettings[0].connectors[0].connectsTo[0].modelIndex);
-
 							 })
 
-								 // let aimPart = _.find(tempBlockConnections[i], function(el) {
-									//  // console.log(myInstances);
-									//  return el.modelIndex === 'arduino_Uno_Rev3(fix)'
-								 // })
-									// tempBlockConnections[i].elConIndex
-							 // }
-							 // //  get the connection endpoint ad reference
-							 // tempBlockConnections.map(data => {
-							 //  // check the connected Part via modelIndex and update the sourceIndex of the connection to compare later
-							 //  let theConnection = _.find(myInstances, function(el) {
-							 // 	 console.log(el.modelIndex)
-							 // 	 	return el.modelIndex === data.elConAimIndex
-							 // 	  })
-							 // 		console.log(theConnection);
-							 // 		data['elConSourceIndex'] = theConnection.viewSettings[0].connectors[0].connectsTo[0].modelIndex
-							 //  // console.log(theConnection.viewSettings[0].connectors[0]);
-							 // })
 							 	 res.json(JSON.stringify(tempBlockConnections));
 								 tempBlockConnections = []
 
@@ -113,7 +111,6 @@ function download(filename,res) {
 		}
 	})
 }
-// download(filename)
 
 
 app.get('/fzz', function (req, res) {
