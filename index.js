@@ -7,11 +7,14 @@ const fs = require('fs');
 const _ = require('lodash')
 const app = express();
 // const {parse, stringify} = require('flatted/cjs')
+const FZPUtils = require('fzp-js')
 
 const fzConnections = require('./fzConnections.js')
 const partNames = require('./partNames.js')
 let mysketch
 
+const FritzingAPI = 'https://fritzing.github.io/fritzing-parts';
+const FritzingAPISVGCore = FritzingAPI+'/svg/core/';
 
 app.use(cors())
 
@@ -39,15 +42,14 @@ function download(filename,res) {
 									return el
 								// }
 							})
-
 							/*
 							get all the partnames from the fz
 							*/
 							let iLoveTest = partNames.partNames(allParts)
 							// fs.writeFileSync('./data/out.json', JSON.stringify(partNames));
 							let myConnections = fzConnections.fzConnections('ardu',iLoveTest)
-							console.log(myConnections.mainBoardEndConnection[0]);
-							// fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
+							// console.log(myConnections.mainBoardEndConnection[0]);
+							fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
 							/*
 							get the arduino instance
 							*/
@@ -56,6 +58,28 @@ function download(filename,res) {
 								return el
 								}
 							 })
+
+							 let newArduino = _.find(iLoveTest, function(el) {
+ 								if (el.name.includes('arduino')){
+ 								return el
+ 								}
+ 							 })
+							 console.log(newArduino.name);
+							 arduinoConnected = []
+							 myConnections.mainBoardEndConnection.map(connector => {
+								 arduinoConnected.push(connector.connections[0].startId)
+							 })
+
+
+							 console.log(arduinoConnected);
+
+							 FZPUtils.FZPUtils.loadFZP('core/'+ newArduino.name)
+									 .then(fzp => {
+										 // console.log(fzp);
+										 thePart(fzp)
+
+									 let test = thePart
+									 console.log(test);
 
 							 elCons = theArduino.viewSettings[0].connectors
 							 for (let i = 0; i < elCons.length; i++) {
@@ -87,9 +111,15 @@ function download(filename,res) {
 									 })
 							 })
 
+							tempBlockConnections.connected = arduinoConnected
+							console.log('THE', tempBlockConnections.connected, tempBlockConnections);
 							 	 res.json(JSON.stringify(tempBlockConnections));
 								 tempBlockConnections = []
-
+							 })
+							 .catch(e => {
+								 // Raven.captureException(e)
+								 // alert('LOAD FZP ERROR '+e)
+							 });
 							})
 							.catch((err) => {
 								console.log("we have an error",err);

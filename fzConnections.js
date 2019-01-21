@@ -18,7 +18,6 @@ module.exports.fzConnections = (mainBoardName, inData) => {
           let getEndOFLine =(data, v, k) => {
             // console.log(targetIndex);
             let targetIndex = v.targetIndex
-            console.log("value from get end ofline ",v);
             let result = getNextElement(data, targetIndex, k);
             let lastResult;
             // console.log(result);
@@ -31,7 +30,7 @@ module.exports.fzConnections = (mainBoardName, inData) => {
               }
             }
             result = result || lastResult; //HACKY!!!
-            result.originIndex
+            // result.originIndex = v.originIndex
             result.connectedTo.wireWay = wireWay
             // console.log("HERE IS THE WIREWAY",wireWay, "AND THE OTHER RESULT",result);
             return result;
@@ -48,35 +47,38 @@ module.exports.fzConnections = (mainBoardName, inData) => {
           let test = _.forEach(part.connectedTo.breadboard, (v,k) => {
             // console.log(v);
             let temp = getEndOFLine(inData, v, k);
-              if (temp.name !== 'wire.fzp') {
+            console.log("##########THE TEMPDATE FORM SORTING THE ENDCONNECTION",temp.name)
+            console.log("value from get end ofline ",v.originId);
+            let tempData = {}
+              // if (temp.name !== 'wire.fzp') {
                 // console.log("this is temp",temp.connectedTo);
-                let tempData = {
+                tempData = {
                   name: temp.name,
                   index: temp.modelIndex,
                   wireWay: temp.connectedTo.wireWay,
-                  connections: temp.connectedTo.breadboard.map(data => {
+                  connections: temp.connectedTo.breadboard.map((data) => {
                     return {startId: v.originId, startIndex: v.originIndex,originId: data.originId, originIndex: data.originIndex, targetIndex: data.targetIndex, targetId: data.targetId, connectorLayer: data.layer}
                   })
                   // temp.
                 }
-                // console.log(tempData)
+                console.log("TEMP DATA CONNECTIONS",tempData.connections);
                 part.endConnection.push(tempData)
-              }
+              // }
           })
           return part
     }
 
     let mainBoard = makePathsFromIndex(inData, thisIsMypart(name))
-      //
-      mainBoard.endConnection.map((next,key) => {
-      otherParts.push(makePathsFromIndex(inData, thisIsMypart(next.name)))
-      })
+      console.log("THE endConnection ",mainBoard.endConnection);
+      // mainBoard.endConnection.map((next,key) => {
+      // otherParts.push(makePathsFromIndex(inData, thisIsMypart(next.name)))
+      // })
 
     myReturnObj = {
       mainBoardName: mainBoard.name,
       mainBoardIndex: mainBoard.modelIndex,
       mainBoardEndConnection: mainBoard.endConnection,
-       // otherParts
+       otherParts
     }
 // console.log(myReturnObj.mainBoardEndConnection[0].endConnection[0].endConnection[0].endConnection[0]);
 return myReturnObj
