@@ -4,6 +4,7 @@ const {FritzingPartsAPIClient} = require('fritzing-parts-api-client-js')
 const express = require('express');
 const cors = require('cors')
 const fs = require('fs');
+const path = require('path');
 const _ = require('lodash')
 const app = express();
 // const {parse, stringify} = require('flatted/cjs')
@@ -24,6 +25,28 @@ let tempBlockConnections = []
 let tempAimConnections = []
 
 let filename = 'test.fzz'
+
+const dataBaseFolder = './examples'
+const dataBase = []
+
+const loadDataBase = (res) => fs.readdir(dataBaseFolder, (err, files) => {
+  files.forEach((file,key) => {
+		let temp = path.parse(file).name
+
+		if (
+			_.find(dataBase, function(el) {
+			return el === temp}))
+			{
+			console.log('Known:', file);
+		}
+
+		else {
+			console.log('NEW FILE:', temp);
+			dataBase.push(temp)
+		}
+  });
+	res.json(dataBase);
+})
 
 function download(filename,res) {
 		return fs.readFile('./examples/'+filename,function(err,data){
@@ -48,87 +71,89 @@ function download(filename,res) {
 							let iLoveTest = partNames.partNames(allParts)
 							// fs.writeFileSync('./data/out.json', JSON.stringify(partNames));
 							let myConnections = fzConnections.fzConnections('ardu',iLoveTest)
-							// console.log(myConnections.mainBoardEndConnection[0]);
-							fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
+							// fs.writeFileSync('./data/endConnections.json', JSON.stringify(myConnections));
 							/*
 							get the arduino instance
 							*/
-							let theArduino = _.find(myInstances, function(el) {
-								if (el.moduleIdRef.includes('arduino')){
-								return el
-								}
-							 })
-
-							 let newArduino = _.find(iLoveTest, function(el) {
+							let newArduino = _.find(iLoveTest, function(el) {
  								if (el.name.includes('arduino')){
  								return el
  								}
- 							 })
-							 console.log(newArduino.name);
-							 arduinoConnected = []
+ 							})
+						  arduinoConnected = []
 							 myConnections.mainBoardEndConnection.map(connector => {
-								 arduinoConnected.push(connector.connections[0].startId)
+								 arduinoConnected.push({connector:connector.connections[0].startId, type: '',connected: true, breadSvgId: ''})
 							 })
-
-
-							 console.log(arduinoConnected);
-
-							 FZPUtils.FZPUtils.loadFZP('core/'+ newArduino.name)
+               /*
+               get the fzp file of the board and the svg
+               */
+							 FZPUtils.FZPUtils.loadFZPandSVGs('core/'+ newArduino.name)
 									 .then(fzp => {
-										 // console.log(fzp);
-										 thePart(fzp)
-
-									 let test = thePart
-									 console.log(test);
-
-							 elCons = theArduino.viewSettings[0].connectors
-							 for (let i = 0; i < elCons.length; i++) {
-							 	elCon = elCons[i]
-								elConSource = elCon.id
-								name = elCon.id
-
-								if (i %2 === 0) {
-									type = 'in'
-
-								}
-								else  {
-									type = 'out'
-
-								}
-								elConSourceIndex = theArduino.modelIndex
-								elConAim = elCon.connectsTo[0].id
-								elConAimIndex = elCon.connectsTo[0].modelIndex
-								if (elConAimIndex !== elConSourceIndex) {
-									tempBlockConnections.push({name,type,elConSourceIndex,elConSource, elConAim, elConAimIndex})
-								}
-							 }
-
-							 tempBlockConnections.map((element) => {
-								 let aimPart = _.find(myInstances, function(el) {
-									 if (el.modelIndex === element.elConAimIndex && el.viewSettings.length > 1) {
-										 return el.modelIndex === element.elConAimIndex
+									 let test = fzp
+									 let returnObject = {
+                     moduelId: test.moduleId,
+                     partName: test.title,
+										 connected: arduinoConnected,
+                     connectors: test.connectors,
+                     breadSvg: test.views.breadboard.svg,
+                     // pcbSvg: test.views.pcb.svg,
 									 }
-									 })
-							 })
 
-							tempBlockConnections.connected = arduinoConnected
-							console.log('THE', tempBlockConnections.connected, tempBlockConnections);
-							 	 res.json(JSON.stringify(tempBlockConnections));
-								 tempBlockConnections = []
+                   returnObject.connected.map((con,key) => {
+                     // console.log(con);
+                     let temp = _.find(returnObject.connectors, (el) => {
+                       // console.log('EL',el.id, 'CON', con.connector);
+                       return el.id === con.connector
+                     })
+                     // console.log("this is my temps from what i have found",temp);
+                     if (temp) {
+                       console.log("this is the temp",temp.views.breadboard.FZPConnectorView, temp.views.breadboard.svgId);
+
+                     switch (true) {
+                       case temp.name.includes('gnd') || temp.name.includes('GND') :
+                          console.log("a ground connector");
+                          returnObject.connected[key].type = 'GND'
+                          returnObject.connected[key].breadSvgId = temp.views.breadboard.svgId
+                         break;
+
+                       case temp.name.includes('5V') || temp.name.includes('3v3') || temp.name.includes('3V') :
+                          console.log("a ground connector");
+                          returnObject.connected[key].type = 'V'
+                          returnObject.connected[key].breadSvgId = temp.views.breadboard.svgId
+                         break;
+
+                       case temp.name.includes('A'):
+                       console.log("an analog connector");
+                       returnObject.connected[key].type = 'in'
+                       returnObject.connected[key].breadSvgId = temp.views.breadboard.svgId
+                       break;
+
+                       default:
+                         returnObject.connected[key].type = 'unknown'
+                         returnObject.connected[key].breadSvgId = temp.views.breadboard.svgId
+                     }
+                     // temp.name
+                   }
+                   })
+                   // console.log(returnObject);
+						        fs.writeFileSync('./data/return.json', JSON.stringify(returnObject));
+							 	 res.json(returnObject);
 							 })
-							 .catch(e => {
-								 // Raven.captureException(e)
-								 // alert('LOAD FZP ERROR '+e)
-							 });
+							 .catch((err) => {
+								 console.log("we have an error in READ FZP",err);
+								 res.json({err:	{show: true,
+ 								message: 'err from READ FZP'}
 							})
-							.catch((err) => {
-								console.log("we have an error",err);
-								res.json(JSON.stringify({err:	{show: true,
-								message: 'err from sketchBundle'}
-								})
-							);
-			})
-		}else {
+						})
+					})
+					.catch((err) => {
+						console.log("we have an error in READ FZZ",err);
+						res.json({err:	{show: true,
+						message: 'err from sketchBundle'}
+						})
+				})
+			}
+			else {
 			console.log("err,readFile",err);
 
 			res.json({err:	{show: true,
@@ -139,8 +164,13 @@ function download(filename,res) {
 }
 
 
+app.get('/database', function (req, res) {
+	loadDataBase(res)
+	// console.log("get the fzz",tempBlockConnections);
+
+});
 app.get('/fzz', function (req, res) {
-	download('none',res)
+	loadDataBase(res)
 	// console.log("get the fzz",tempBlockConnections);
 
 });
