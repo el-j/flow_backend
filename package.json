@@ -3,6 +3,8 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "fritzing-js": "https://github.com/fritzing/fritzing-js",
+    "fritzing-parts-api-client-js": "https://github.com/fritzing/fritzing-parts-api-client-js.git",
+    "fzp-js": "https://github.com/fritzing/fzp-js.git",
     "lodash": "^4.17.11"
   }
 }
