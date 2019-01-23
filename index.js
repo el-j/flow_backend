@@ -67,7 +67,7 @@ const loadDataBase = (res) => fs.readdir(dataBaseFolder, (err, files) => {
 		else {
       if (temp.ext !== '.json') {
         dataBase.push(temp)
-        console.log('NEW FILE:', temp);
+        // console.log('NEW FILE:', temp);
 
       }
 		}
@@ -87,7 +87,7 @@ function download(filename,res) {
       )){
         _.find(dataBase,el => {
           (el.name === dbDataName) ? (
-            console.log("the data we use",el),
+            // console.log("the data we use",el),
             res.json(el.data)):null
           })
         console.log('USE FROM DATABASE',dbDataName)
@@ -234,7 +234,12 @@ function download(filename,res) {
 
 
 app.get('/database', function (req, res) {
+  if(_.isEmpty(dataBase)) {
 	loadDataBase(res)
+  }
+  else {
+    res.json(dataBase)
+  }
 	// console.log("get the fzz",tempBlockConnections);
 
 });
