@@ -4,7 +4,7 @@ const _ = require('lodash')
 module.exports.fzConnections = (mainBoardName, inData) => {
   let name = mainBoardName
   let otherParts = []
-  console.log(mainBoardName);
+  // console.log(mainBoardName);
   let thisIsMypart = (name) =>{
     return  _.find(inData, function(el,key) {
       if (el.name.includes(name)&&!el.name.includes('shield') ) {
@@ -47,8 +47,8 @@ module.exports.fzConnections = (mainBoardName, inData) => {
           let test = _.forEach(part.connectedTo.breadboard, (v,k) => {
             // console.log(v);
             let temp = getEndOFLine(inData, v, k);
-            console.log("##########THE TEMPDATE FORM SORTING THE ENDCONNECTION",temp.name)
-            console.log("value from get end ofline ",v.originId);
+            // console.log("##########THE TEMPDATE FORM SORTING THE ENDCONNECTION",temp.name)
+            // console.log("value from get end ofline ",v.originId);
             let tempData = {}
               // if (temp.name !== 'wire.fzp') {
                 // console.log("this is temp",temp.connectedTo);
@@ -61,7 +61,7 @@ module.exports.fzConnections = (mainBoardName, inData) => {
                   })
                   // temp.
                 }
-                console.log("TEMP DATA CONNECTIONS",tempData.connections);
+                // console.log("TEMP DATA CONNECTIONS",tempData.connections);
                 part.endConnection.push(tempData)
               // }
           })
@@ -69,7 +69,7 @@ module.exports.fzConnections = (mainBoardName, inData) => {
     }
 
     let mainBoard = makePathsFromIndex(inData, thisIsMypart(name))
-      console.log("THE endConnection ",mainBoard.endConnection);
+      // console.log("THE endConnection ",mainBoard.endConnection);
       // mainBoard.endConnection.map((next,key) => {
       // otherParts.push(makePathsFromIndex(inData, thisIsMypart(next.name)))
       // })
