@@ -102,6 +102,7 @@ function download(filename,res) {
 						.then((sketchBundle) => {
 							console.log("from sketchBundle", filename,filename.slice(0, -1));
 							let mytest = sketchBundle.primary
+
 							fzFilename = filename.slice(0, -1)
 							let myInstances = sketchBundle.primary[fzFilename].instances
 							/*
@@ -146,6 +147,7 @@ function download(filename,res) {
                      breadSvg: test.views.breadboard.svg,
                      // pcbSvg: test.views.pcb.svg,
 									 }
+
 
                    returnObject.connected.map((con,key) => {
                      // console.log(con);
